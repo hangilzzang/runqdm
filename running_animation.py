@@ -48,7 +48,7 @@ def clear_previous_frame(height):
 def main():
     frames = read_frames('running_man_frame')  # 프레임 파일 경로 설정
     frame_count = len(frames)
-    frame_height = 24  # 프레임 높이 24로 수정 (인덱스 표시줄 포함)
+    frame_height = 23  # 프레임 높이(줄 수)
 
     # 커서 숨기기
     print("\033[?25l", end="")
@@ -57,17 +57,14 @@ def main():
         first_run = True
         while True:
             for idx, frame in enumerate(frames):
-                # 프레임에 인덱스 정보 추가
-                frame_with_index = frame + f"\n현재 프레임 인덱스: {idx}"
-                
                 if first_run and idx == 0:
                     # 최초 실행시 첫 프레임만 바로 출력
-                    sys.stdout.write(frame_with_index)
+                    sys.stdout.write(frame)
                     first_run = False
                 else:
                     # 나머지 모든 경우에는 이전 프레임을 지우고 새 프레임 출력
                     clear_previous_frame(frame_height)
-                    sys.stdout.write(frame_with_index)
+                    sys.stdout.write(frame)
 
                 sys.stdout.flush()  # 출력 버퍼 비우기
                 time.sleep(0.1)  # 0.1초 딜레이
