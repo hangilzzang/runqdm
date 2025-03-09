@@ -37,7 +37,7 @@ def read_frames(directory):
 def clear_previous_frame(height):
     """이전 프레임을 완전히 지우는 함수"""
     # 커서를 프레임의 시작 위치로 이동
-    sys.stdout.write("\033[F" * (height - 1))
+    sys.stdout.write("\033[F" * height)
     # 각 라인을 지움
     for _ in range(height):
         sys.stdout.write("\033[2K")  # 현재 라인을 완전히 지움
@@ -48,7 +48,7 @@ def clear_previous_frame(height):
 def main():
     frames = read_frames('running_man_frame')  # 프레임 파일 경로 설정
     frame_count = len(frames)
-    frame_height = 23  # 프레임 높이(줄 수)
+    frame_height = 24  # 프레임 높이를 24로 수정 (고정 텍스트 줄 포함)
 
     # 커서 숨기기
     print("\033[?25l", end="")
@@ -57,14 +57,17 @@ def main():
         first_run = True
         while True:
             for idx, frame in enumerate(frames):
+                # 프레임과 고정 텍스트를 합침
+                frame_with_text = frame + "\n고정된 텍스트 라인"
+                
                 if first_run and idx == 0:
                     # 최초 실행시 첫 프레임만 바로 출력
-                    sys.stdout.write(frame)
+                    sys.stdout.write(frame_with_text)
                     first_run = False
                 else:
                     # 나머지 모든 경우에는 이전 프레임을 지우고 새 프레임 출력
                     clear_previous_frame(frame_height)
-                    sys.stdout.write(frame)
+                    sys.stdout.write(frame_with_text)
 
                 sys.stdout.flush()  # 출력 버퍼 비우기
                 time.sleep(0.1)  # 0.1초 딜레이
