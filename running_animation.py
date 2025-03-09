@@ -37,7 +37,7 @@ def read_frames(directory):
 def clear_previous_frame(height):
     """이전 프레임을 완전히 지우는 함수"""
     # 커서를 프레임의 시작 위치로 이동
-    sys.stdout.write("\033[F" * height)
+    sys.stdout.write("\033[F" * (height - 1))
     # 각 라인을 지움
     for _ in range(height):
         sys.stdout.write("\033[2K")  # 현재 라인을 완전히 지움
