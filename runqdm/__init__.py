@@ -9,7 +9,7 @@ import pkg_resources
 class runqdm:
     FRAME_HEIGHT = 24  # 프레임 높이를 24로 수정 (고정 텍스트 줄 포함)
     ANIMATION_DELAY = 0.03
-    BAR_WIDTH = 40
+    BAR_WIDTH = 36
 
     
     def __init__(self, iterable):
@@ -29,6 +29,11 @@ class runqdm:
         # 애니메이션 스레드 시작
         self.animation_thread = threading.Thread(target=self.start_animation)
         self.animation_thread.daemon = True
+
+        # 남은 시간 표시
+        self.iter_times = []  # 각 반복 완료 시간 저장
+        self.last_iter_start = None  # 현재 반복 시작 시간
+        self.estimated_time = None  # 예상 남은 시간 (초)
     
 
     def __iter__(self):
@@ -36,11 +41,23 @@ class runqdm:
 
     def __next__(self):
         try:
-            self.current += 1  # 진행 상태 증가
+            self.current += 1
             if self.current == 0:
                 self.animation_thread.start()
-            item = next(self.iterator)  # 내부 이터레이터에서 다음 값 가져오기
-            return item  # 실제 값 반환
+                self.last_iter_start = time.time()
+            else:
+                # 이전 반복 완료 시간 기록
+                iter_time = time.time() - self.last_iter_start
+                self.iter_times.append(iter_time)
+                # 새로운 반복 시작 시간 기록
+                self.last_iter_start = time.time()
+                # 평균 시간 계산 및 예상 시간 업데이트
+                avg_time = sum(self.iter_times) / len(self.iter_times)
+                remaining_iters = self.total - self.current
+                self.estimated_time = avg_time * remaining_iters
+
+            item = next(self.iterator)
+            return item
         except StopIteration:
             # 마지막 상태를 보여주기 위해 잠시 대기
             time.sleep(self.ANIMATION_DELAY * 2)  
@@ -64,7 +81,16 @@ class runqdm:
         filled_length = int(self.BAR_WIDTH * progress)
         bar = '█' * filled_length + '-' * (self.BAR_WIDTH - filled_length)
         
-        return f"🏃 running {percent}% |{bar}| {self.current}/{self.total}"
+        # 시간 표시 부분 추가
+        if self.current == 0:
+            time_text = "[Time Left: ???]"
+        else:
+            hours = int(self.estimated_time // 3600)
+            minutes = int((self.estimated_time % 3600) // 60)
+            seconds = int(self.estimated_time % 60)
+            time_text = f"[Time Left: {hours:02d}:{minutes:02d}:{seconds:02d}]"
+        
+        return f"🏃 running {percent}% |{bar}| {self.current}/{self.total} {time_text}"
 
     def play_animation_cycle(self, frames):
         for frame in frames:
