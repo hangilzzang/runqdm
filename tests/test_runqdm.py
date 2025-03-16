@@ -1,8 +1,8 @@
 from runqdm import runqdm
 import time
 
-for i in runqdm(range(100)):
-    sum(x for x in range(1, 10**7))  
+for i in runqdm(796):
+    sum(x ** 2 for x in range(1, 10**7))  
 
 
 # print('done')

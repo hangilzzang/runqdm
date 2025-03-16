@@ -9,13 +9,14 @@ import pkg_resources
 class runqdm:
     FRAME_HEIGHT = 24  # 프레임 높이를 24로 수정 (고정 텍스트 줄 포함)
     ANIMATION_DELAY = 0.03
+    BAR_WIDTH = 40
 
     
     def __init__(self, iterable):
         self.iterable = iterable  # range(10), list 등 반복 가능한 객체 저장
         self.iterator = iter(iterable)  # 내부적으로 iterator 생성
-        self.total = len(iterable) if hasattr(iterable, '__len__') else None
-        self.current = 0  # 현재 진행 상태
+        self.total = len(iterable)
+        self.current = -1  # 현재 진행 상태
         self.run_animation = True        
         
         # 애니메이션 실행 준비        
@@ -28,7 +29,6 @@ class runqdm:
         # 애니메이션 스레드 시작
         self.animation_thread = threading.Thread(target=self.start_animation)
         self.animation_thread.daemon = True
-        self.animation_thread.start()
     
 
     def __iter__(self):
@@ -36,10 +36,14 @@ class runqdm:
 
     def __next__(self):
         try:
-            item = next(self.iterator)  # 내부 이터레이터에서 다음 값 가져오기
             self.current += 1  # 진행 상태 증가
+            if self.current == 0:
+                self.animation_thread.start()
+            item = next(self.iterator)  # 내부 이터레이터에서 다음 값 가져오기
             return item  # 실제 값 반환
         except StopIteration:
+            # 마지막 상태를 보여주기 위해 잠시 대기
+            time.sleep(self.ANIMATION_DELAY * 2)  
             self.run_animation = False
             self.animation_thread.join()
             raise StopIteration  # 반복 종료
@@ -53,11 +57,21 @@ class runqdm:
 
         print("\033[?25h", end="") # 커서 보이기
     
+    def create_progress_text(self):
+        """프로그래스바 텍스트를 생성하는 함수"""
+        progress = self.current / self.total
+        percent = int(progress * 100)
+        filled_length = int(self.BAR_WIDTH * progress)
+        bar = '█' * filled_length + '-' * (self.BAR_WIDTH - filled_length)
+        
+        return f"🏃 running {percent}% |{bar}| {self.current}/{self.total}"
+
     def play_animation_cycle(self, frames):
         for frame in frames:
-            if not self.run_animation:  # 각 프레임 시작 전에 체크
+            if not self.run_animation:
                 break
-            next_frame = frame + "\n고정된 텍스트 라인"
+            
+            next_frame = frame + "\n" + self.create_progress_text()
             sys.stdout.write(f"\033[{self.FRAME_HEIGHT}F")
             sys.stdout.write(next_frame)
             sys.stdout.flush()
@@ -90,14 +104,3 @@ class runqdm:
                 frames.append(frame)
 
         return frames
-
-    def clear_previous_frame(self, height):
-        """이전 프레임을 완전히 지우는 함수"""
-        # 커서를 프레임의 시작 위치로 이동
-        sys.stdout.write("\033[F" * height)
-        # 각 라인을 지움
-        for _ in range(height):
-            sys.stdout.write("\033[2K")  # 현재 라인을 완전히 지움
-            sys.stdout.write("\033[1B")  # 한 라인 아래로 이동
-        # 다시 프레임의 시작 위치로 이동
-        sys.stdout.write("\033[F" * height)
