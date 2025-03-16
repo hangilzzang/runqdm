@@ -2,7 +2,7 @@
 pip install runqdm
 ```
 
-![runqdm 데모](여기에_imgur_링크)
+![runqdm 데모](https://i.imgur.com/kYmsqq7.gif)
 
 ## What is runqdm?
 
