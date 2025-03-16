@@ -8,7 +8,7 @@ import pkg_resources
 
 class runqdm:
     FRAME_HEIGHT = 24  # 프레임 높이를 24로 수정 (고정 텍스트 줄 포함)
-    ANIMATION_DELAY = 0.03
+    ANIMATION_DELAY = 0.08
     BAR_WIDTH = 36
 
     
